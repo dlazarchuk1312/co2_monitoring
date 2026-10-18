@@ -1,7 +1,102 @@
 {% extends 'base.html' %}
-{% block title %}MQTT Stream - CO2 Monitor{% endblock %}
+{% block title %}MQTT - CO2 Monitoring{% endblock %}
+
 {% block content %}
 <div class="py-4">
-    <h2 class="mb-3">Live sensor data</h2>
+    <h2 class="mb-3">MQTT Data</h2>
+
+    {% if has_data %}
+        <canvas id="co2TrendChart" height="100"></canvas>
+
+        <h4 class="mt-4">Statistic</h4>
+        <div class="table-responsive mt-2">
+            <table class="table table-striped table-hover border">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Enterprise</th>
+                        <th>Current (ppm)</th>
+                        <th>Avg (ppm)</th>
+                        <th>Min / Max (ppm)</th>
+                        <th>Status</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in summary %}
+                    <tr id="{{ row.enterprise|slugify }}">
+                        <td class="fw-bold">{{ row.enterprise }}</td>
+                        <td>{{ row.current }}</td>
+                        <td>{{ row.mean }}</td>
+                        <td>{{ row.min }} / {{ row.max }}</td>
+                        <td>
+                            {% if row.status_text == 'Normal' %}
+                                <span style="color: green;">{{ row.status_text }}</span>
+                            {% elif row.status_text == 'Warning' %}
+                                <span style="color: orange;">{{ row.status_text }}</span>
+                            {% else %}
+                                <span style="color: red;">{{ row.status_text }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ row.trend }} ({{ row.slope }})</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h4 class="mt-4">Latest sensor readings ({{ total_records }} total)</h4>
+        <div class="mt-2 border" style="height: 300px; overflow-y: scroll;">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Enterprise</th>
+                        <th>CO2 (ppm)</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td class="fw-bold">{{ log.enterprise }}</td>
+                        <td>{{ log.co2_level }}</td>
+                        <td>{{ log.time_str }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <p>No data</p>
+    {% endif %}
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if has_data %}
+    var ctx = document.getElementById('co2TrendChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {% for d in chart_data %}
+                {
+                    label: '{{ d.label }}',
+                    data: {{ d.data|safe }},
+                    borderColor: '{{ d.color }}',
+                    backgroundColor: '{{ d.color }}'
+                },
+                {% endfor %}
+            ]
+        },
+        options: {
+            scales: {
+                x: { title: { display: true, text: 'Time' } },
+                y: { title: { display: true, text: 'CO2 ppm' } }
+            }
+        }
+    });
+    {% endif %}
+</script>
 {% endblock %}
