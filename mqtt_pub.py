@@ -1,7 +1,10 @@
 import time
 import json
+from datetime import datetime, timedelta, timezone
 import numpy as np
 import paho.mqtt.client as mqtt
+
+START_DATE = "2026-01-01"
 
 enterprises = [
     {"name": "Zaporizhstal", "base": 4200.0, "std": 120.0, "limit": 4500.0},
@@ -13,7 +16,7 @@ enterprises = [
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.connect("localhost", 1883, 60)
-print("Generator launched. Data will be send every 5 seconds.")
+vtime = datetime.strptime(START_DATE, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 while True:
     for ent in enterprises:
         # take base value
@@ -33,8 +36,9 @@ while True:
             "enterprise": ent["name"],
             "co2_level": value,
             "limit": ent["limit"],
-            "timestamp": int(time.time())
+            "timestamp": int(vtime.timestamp())
         }
         client.publish("co2/sensors", json.dumps(payload))
         print(f"Sent: {ent['name']} = {value} ppm")
-    time.sleep(5)
+    vtime += timedelta(days=1)
+    time.sleep(1)
