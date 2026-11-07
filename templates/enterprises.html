@@ -27,7 +27,7 @@
                     <td>{{ ent.city }}</td>
                     <td>{{ ent.limit }}</td>
                     <td>
-                        {% if ent.avg_co2 %}
+                        {% if ent.avg_co2 is not None %}
                             {{ ent.avg_co2 }}
                         {% else %}
                             <span class="text-muted">-</span>
