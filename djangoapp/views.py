@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from sklearn.linear_model import LinearRegression
+from djangoapp import forecasting as fc
 
 client = MongoClient('localhost', 27017)
 db = client['co2db']
@@ -138,4 +139,42 @@ def mqtt_dashboard(request):
     return render(request, 'mqtt_dashboard.html', context)
 
 def forecasting(request):
-    return render(request, 'forecasting.html')
+    names = fc.list_enterprises()
+    name = request.GET.get('enterprise', '')
+    if name not in names:
+        name = names[0] if names else ''
+    horizon = request.GET.get('horizon', 'month')
+    if horizon not in fc.HORIZONS:
+        horizon = 'month'
+    days = fc.HORIZONS[horizon]
+
+    result = fc.build_result(name, days) if name else None
+    overview = fc.build_overview()
+
+    chart_labels = []
+    chart_history = []
+    chart_forecast = []
+
+    if result:
+        hist_n = len(result['history_values'])
+        fut_n = len(result['future_values'])
+        chart_labels = json.dumps(
+            [t.strftime('%d.%m.%Y') for t in result['history_times']]
+            + [t.strftime('%d.%m.%Y') for t in result['future_times']]
+        )
+        chart_history = json.dumps(result['history_values'] + [None] * fut_n)
+        anchor = result['history_values'][-1] if result['history_values'] else None
+        chart_forecast = json.dumps([None] * (hist_n - 1) + [anchor] + result['future_values'])
+
+    context = {
+        'names': names,
+        'selected': name,
+        'horizon': horizon,
+        'result': result,
+        'overview': overview,
+        'has_data': result is not None,
+        'chart_labels': chart_labels,
+        'chart_history': chart_history,
+        'chart_forecast': chart_forecast,
+    }
+    return render(request, 'forecasting.html', context)
