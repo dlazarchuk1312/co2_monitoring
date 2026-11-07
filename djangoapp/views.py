@@ -103,7 +103,7 @@ def mqtt_dashboard(request):
             'trend': trend_text,
         })
     all_times = sorted(df['timestamp'].unique())
-    chart_labels = json.dumps([datetime.fromtimestamp(t).strftime('%H:%M:%S') for t in all_times])
+    chart_labels = json.dumps([datetime.fromtimestamp(t).strftime('%d.%m.%Y') for t in all_times])
     colors = ['blue', 'green', 'orange', 'red', 'purple']
     chart_data_json = []
     i = 0
@@ -124,7 +124,7 @@ def mqtt_dashboard(request):
         recent_logs.append({
             'enterprise': item.get('enterprise'),
             'co2_level': item.get('co2_level'),
-            'time_str': datetime.fromtimestamp(item.get('timestamp')).strftime('%H:%M:%S'),
+            'date_str': datetime.fromtimestamp(item.get('timestamp')).strftime('%d.%m.%Y'),
         })
     context = {
         'has_data': True,

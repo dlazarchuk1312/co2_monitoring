@@ -51,7 +51,7 @@
                     <tr>
                         <th>Enterprise</th>
                         <th>CO2 (ppm)</th>
-                        <th>Time</th>
+                        <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,7 +59,7 @@
                     <tr>
                         <td class="fw-bold">{{ log.enterprise }}</td>
                         <td>{{ log.co2_level }}</td>
-                        <td>{{ log.time_str }}</td>
+                        <td>{{ log.date_str }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -85,7 +85,14 @@
                     label: '{{ d.label }}',
                     data: {{ d.data|safe }},
                     borderColor: '{{ d.color }}',
-                    backgroundColor: '{{ d.color }}'
+                    backgroundColor: '{{ d.color }}',
+                    showLine: true,
+                    spanGaps: true,
+                    fill: false,
+                    pointRadius: 1,
+                    pointHoverRadius: 6,
+                    borderWidth: 2,
+                    tension: 0.1
                 },
                 {% endfor %}
             ]
